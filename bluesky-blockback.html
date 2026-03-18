@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>icze4r's spite: Bluesky Block-Back Tool</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg: #050a0f;
+    --surface: #0d1a24;
+    --surface2: #112030;
+    --border: #1e3a50;
+    --accent: #00b4d8;
+    --accent2: #ff6b6b;
+    --accent3: #90e0ef;
+    --text: #caf0f8;
+    --text-dim: #6a8fa3;
+    --text-dimmer: #3d5f73;
+    --success: #52d68a;
+    --warning: #f4a261;
+    --danger: #ff6b6b;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,180,216,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,180,216,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  header {
+    margin-bottom: 48px;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tag::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--sans);
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 800;
+    line-height: 1.1;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  /* Cards / panels */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  /* Form elements */
+  label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+
+  label:first-child { margin-top: 0; }
+
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,180,216,0.1);
+  }
+
+  input::placeholder { color: var(--text-dimmer); }
+
+  .hint {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dimmer);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .hint a { color: var(--accent); text-decoration: none; }
+  .hint a:hover { text-decoration: underline; }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 12px 24px;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    font-weight: 700;
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--accent3); transform: translateY(-1px); }
+
+  .btn-danger {
+    background: var(--accent2);
+    color: #000;
+    font-weight: 700;
+  }
+  .btn-danger:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-sm { padding: 7px 14px; font-size: 10px; }
+
+  /* Status / log */
+  #status {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    padding: 12px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    min-height: 40px;
+    margin-top: 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-all;
+    display: none;
+  }
+
+  #status.visible { display: block; }
+  #status.error { border-color: var(--danger); color: var(--danger); }
+  #status.success { border-color: var(--success); color: var(--success); }
+  #status.info { border-color: var(--accent); color: var(--accent); }
+
+  /* Filters row */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toggle {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  .toggle input { opacity: 0; width: 0; height: 0; }
+
+  .slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 22px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .slider::before {
+    content: '';
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+
+  input:checked + .slider { background: var(--accent); }
+  input:checked + .slider::before { transform: translateX(18px); }
+
+  .toggle-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Blockers list */
+  #blockers-panel { display: none; }
+
+  .stats-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    text-align: center;
+    padding: 12px 20px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .stat-num {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+    display: block;
+  }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dimmer);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: block;
+    margin-top: 4px;
+  }
+
+  .blocker-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-bottom: 20px;
+  }
+
+  .blocker-list::-webkit-scrollbar { width: 4px; }
+  .blocker-list::-webkit-scrollbar-track { background: transparent; }
+  .blocker-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .blocker-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+
+  .blocker-item:hover { border-color: var(--accent); }
+
+  .blocker-item.excluded {
+    opacity: 0.4;
+    border-color: var(--text-dimmer);
+  }
+
+  .blocker-item.already-blocked {
+    border-color: var(--text-dimmer);
+    background: rgba(255,107,107,0.04);
+  }
+
+  .blocker-item.blocked-success {
+    border-color: var(--success);
+    background: rgba(82,214,138,0.04);
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    object-fit: cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text-dim);
+    overflow: hidden;
+  }
+
+  .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+  .blocker-info { flex: 1; min-width: 0; }
+
+  .blocker-handle {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .blocker-did {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dimmer);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .badges {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .badge-follow { background: rgba(0,180,216,0.15); color: var(--accent); border: 1px solid rgba(0,180,216,0.3); }
+  .badge-already { background: rgba(255,107,107,0.1); color: var(--accent2); border: 1px solid rgba(255,107,107,0.3); }
+  .badge-skipped { background: rgba(100,100,100,0.1); color: var(--text-dimmer); border: 1px solid var(--border); }
+  .badge-done { background: rgba(82,214,138,0.1); color: var(--success); border: 1px solid rgba(82,214,138,0.3); }
+
+  .blocker-cb {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .actions-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .select-actions {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    gap: 12px;
+  }
+
+  .select-actions span {
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .select-actions span:hover { color: var(--accent); }
+
+  /* Progress bar */
+  .progress-wrap {
+    margin-top: 16px;
+    display: none;
+  }
+
+  .progress-wrap.visible { display: block; }
+
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.3s;
+  }
+
+  .progress-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* Log */
+  .log {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    max-height: 120px;
+    overflow-y: auto;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  .log.visible { display: block; }
+  .log-line { line-height: 1.8; }
+  .log-ok { color: var(--success); }
+  .log-skip { color: var(--text-dimmer); }
+  .log-err { color: var(--danger); }
+  .log-info { color: var(--accent); }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  .warning-note {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 16px;
+    background: rgba(244,162,97,0.06);
+    border: 1px solid rgba(244,162,97,0.3);
+    border-radius: 4px;
+    margin-top: 16px;
+  }
+
+  .warning-note span {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--warning);
+    line-height: 1.6;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .page-num-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .panel { padding: 20px 16px; }
+    h1 { font-size: 26px; }
+    .stats-row { gap: 10px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="tag">Bluesky Utility</div>\\
+    <h1>Block<span>Back</span></h1>
+    <p class="subtitle">Find accounts blocking you on Bluesky. Filter. Block them back.</p>
+	<p>( <span style="font-variant: small-caps;">Courtesy of Durandal and Bernhard Strauss</span> )</p>
+  </header>
+
+  <!-- Login panel -->
+  <div class="panel" id="login-panel">
+    <div class="panel-title">// 01 — Authenticate</div>
+
+    <label for="handle">Your Bluesky Handle</label>
+    <input type="text" id="handle" placeholder="you.bsky.social" autocomplete="off" spellcheck="false">
+
+    <label for="apppass">App Password</label>
+    <input type="password" id="apppass" placeholder="xxxx-xxxx-xxxx-xxxx" autocomplete="off">
+    <div class="hint">
+      Generate one at <a href="https://bsky.app/settings/app-passwords" target="_blank">Settings → App Passwords</a>.
+      Your credentials are sent directly to Bluesky — never stored or logged here.
+    </div>
+
+    <hr class="divider">
+
+    <div class="panel-title">// 02 — Blocklist from ClearSky</div>
+    <p style="font-family:var(--mono);font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:16px;">
+      The tool will attempt to fetch all pages from ClearSky automatically when you connect.
+      If your browser blocks it (CORS — common when running locally), a manual fallback will appear below.
+    </p>
+
+    <!-- Manual fallback — hidden until CORS fails -->
+    <div id="cors-fallback" style="display:none;">
+      <div style="padding:12px 16px;background:rgba(244,162,97,0.07);border:1px solid rgba(244,162,97,0.35);border-radius:6px;margin-bottom:16px;">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--warning);line-height:1.7;display:block;">
+          ⚠ Auto-fetch was blocked by your browser (CORS). This happens when running the file locally.<br>
+          Manual workaround: open each ClearSky page below, save the JSON, then upload all files here.
+        </span>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <span style="font-family:var(--mono);font-size:11px;color:var(--text-dimmer);text-transform:uppercase;letter-spacing:0.1em;">Your ClearSky pages</span><br>
+        <div id="clearsky-url-list" style="margin-top:6px;font-family:var(--mono);font-size:12px;line-height:2;color:var(--text-dimmer);">
+          Enter your handle above to see your URLs
+        </div>
+      </div>
+
+      <!-- Upload OR paste tabs -->
+      <div style="display:flex;gap:0;margin-bottom:12px;">
+        <button class="btn btn-ghost btn-sm" id="tab-upload" onclick="switchTab('upload')" style="border-radius:4px 0 0 4px;border-right:none;">📁 Upload Files</button>
+        <button class="btn btn-ghost btn-sm" id="tab-paste" onclick="switchTab('paste')" style="border-radius:0 4px 4px 0;">📋 Paste JSON</button>
+      </div>
+
+      <div id="pane-upload">
+        <input type="file" id="json-file" accept=".json,application/json" multiple style="display:none" onchange="handleFileUpload(event)">
+        <button class="btn btn-ghost" onclick="$('json-file').click()" style="width:100%;justify-content:center;border-style:dashed;">
+          Browse — select one or more JSON files
+        </button>
+        <div class="hint" style="margin-top:6px;color:var(--text-dimmer);">Save each ClearSky page as a .json file, then select them all here (Ctrl/Cmd+Click).</div>
+        <div class="hint" id="upload-hint" style="margin-top:6px;"></div>
+      </div>
+
+      <div id="pane-paste" style="display:none;">
+        <textarea id="json-paste" placeholder='Paste the full JSON from ClearSky here…
+{"data":{"blocklist":[{"did":"did:plc:..."},...]}}'
+          style="width:100%;height:110px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:11px;padding:12px;resize:vertical;outline:none;line-height:1.5;"
+          oninput="validatePaste()"></textarea>
+        <div class="hint" id="paste-hint"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+      <button class="btn btn-primary" id="login-btn" onclick="doLogin()">
+        Connect &amp; Run →
+      </button>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text-dimmer);" id="blocklist-ready-label"></span>
+    </div>
+
+    <div id="status" role="alert"></div>
+
+    <div class="warning-note">
+      <span>⚠ Use an App Password, not your main password. This tool runs entirely in your browser.</span>
+    </div>
+  </div>
+
+  <!-- Blockers panel -->
+  <div class="panel" id="blockers-panel">
+    <div class="panel-title">// 02 — Blockers Found</div>
+
+    <div class="stats-row">
+      <div class="stat"><span class="stat-num" id="stat-total">–</span><span class="stat-label">Blocking you</span></div>
+      <div class="stat"><span class="stat-num" id="stat-following">–</span><span class="stat-label">You follow</span></div>
+      <div class="stat"><span class="stat-num" id="stat-already">–</span><span class="stat-label">Already blocked</span></div>
+      <div class="stat"><span class="stat-num" id="stat-eligible">–</span><span class="stat-label">Eligible</span></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filter-group">
+        <label class="toggle">
+          <input type="checkbox" id="filter-following" checked onchange="applyFilters()">
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Skip people I follow</span>
+      </div>
+      <div class="filter-group">
+        <label class="toggle">
+          <input type="checkbox" id="filter-already" checked onchange="applyFilters()">
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Skip already-blocked</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="select-actions">
+      <span onclick="selectAll()">Select all</span>
+      <span onclick="selectNone()">Deselect all</span>
+      <span onclick="selectEligible()">Select eligible only</span>
+    </div>
+
+    <ul class="blocker-list" id="blocker-list"></ul>
+
+    <div class="page-num-row">
+      <span id="page-info"></span>
+      <button class="btn btn-ghost btn-sm" id="load-more-btn" onclick="loadMore()" style="display:none;">Load more</button>
+    </div>
+
+    <hr class="divider">
+
+    <div class="actions-bar">
+      <button class="btn btn-danger" id="block-btn" onclick="doBlockSelected()">
+        Block Selected
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="resetApp()">← Start over</button>
+      <span id="selected-count" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);"></span>
+    </div>
+
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-label" id="progress-label"></div>
+    </div>
+
+    <div class="log" id="log"></div>
+  </div>
+<a href="https://bsky.app/profile/iczer.one" target="_blank" style="display:inline-block;margin-bottom:10px;opacity:0.9;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'">
+      <img src="data:image/png;base64,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
+" 
+           alt="ICZE4R" width="128" height="33" style="display:block;image-rendering:crisp-edges;">
+    </a>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let session = null;
+let myFollows = new Set();
+let myBlocks = new Set();
+let allBlockers = [];   // [{did, handle?, ...}] from ClearSky JSON
+let enriched = [];
+let manualBlocklistJSON = null; // parsed JSON from file/paste
+
+const BSKY = 'https://bsky.social/xrpc';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ── DOM helpers ────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function setStatus(msg, type = '') {
+  const el = $('status');
+  el.textContent = msg;
+  el.className = 'visible ' + type;
+}
+function clearStatus() { $('status').className = ''; }
+
+function logLine(msg, cls = '') {
+  const log = $('log');
+  log.classList.add('visible');
+  const div = document.createElement('div');
+  div.className = 'log-line ' + cls;
+  div.textContent = msg;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function setProgress(pct, label) {
+  $('progress-wrap').classList.add('visible');
+  $('progress-fill').style.width = pct + '%';
+  $('progress-label').textContent = label;
+}
+
+// ── ClearSky URL list (updates as user types handle) ─────────────────────
+const CLEARSKY_BASE = 'https://public.api.clearsky.services/api/v1/anon/single-blocklist';
+
+$('handle').addEventListener('input', () => {
+  const h = $('handle').value.trim().replace(/^@/, '');
+  const el = $('clearsky-url-list');
+  if (!h) { el.textContent = 'Enter your handle above to see your URLs'; return; }
+  // Show first 5 page URLs as clickable links as a guide
+  el.innerHTML = [1,2,3,4,5].map(p =>
+    `<a href="${CLEARSKY_BASE}/${encodeURIComponent(h)}/${p}" target="_blank"
+        style="color:var(--accent3);text-decoration:none;display:block;"
+        onmouseover="this.style.textDecoration='underline'"
+        onmouseout="this.style.textDecoration='none'">
+       Page ${p} ↗
+     </a>`
+  ).join('') + `<span style="color:var(--text-dimmer);">…and so on until a page returns fewer than 100 results</span>`;
+});
+
+// ── Tab switching ─────────────────────────────────────────────────────────
+function switchTab(tab) {
+  $('pane-upload').style.display = tab === 'upload' ? '' : 'none';
+  $('pane-paste').style.display  = tab === 'paste'  ? '' : 'none';
+  $('tab-upload').style.borderColor = tab === 'upload' ? 'var(--accent)' : '';
+  $('tab-upload').style.color       = tab === 'upload' ? 'var(--accent)' : '';
+  $('tab-paste').style.borderColor  = tab === 'paste'  ? 'var(--accent)' : '';
+  $('tab-paste').style.color        = tab === 'paste'  ? 'var(--accent)' : '';
+}
+
+// ── File upload ───────────────────────────────────────────────────────────
+function handleFileUpload(e) {
+  const files = [...e.target.files];
+  if (!files.length) return;
+
+  const hint = $('upload-hint');
+  hint.textContent = `Reading ${files.length} file(s)…`;
+  hint.style.color = 'var(--text-dim)';
+
+  const results = new Array(files.length);
+  let completed = 0;
+
+  files.forEach((file, idx) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = JSON.parse(ev.target.result);
+        const list = extractBlocklist(parsed);
+        if (!list) throw new Error(`No blocklist found in "${file.name}"`);
+        results[idx] = { name: file.name, list };
+      } catch (err) {
+        results[idx] = { name: file.name, error: err.message };
+      }
+      completed++;
+      if (completed === files.length) mergeResults(results);
+    };
+    reader.readAsText(file);
+  });
+}
+
+function mergeResults(results) {
+  const hint = $('upload-hint');
+  const errors = results.filter(r => r.error);
+  const good   = results.filter(r => r.list);
+
+  if (!good.length) {
+    hint.textContent = '✗ No valid blocklist data found in any file.';
+    hint.style.color = 'var(--danger)';
+    manualBlocklistJSON = null;
+    $('blocklist-ready-label').textContent = '';
+    return;
+  }
+
+  // Merge + deduplicate by DID
+  const seen = new Set();
+  const merged = [];
+  good.forEach(({ list }) => {
+    list.forEach(item => {
+      const did = item.did || item;
+      if (!seen.has(did)) { seen.add(did); merged.push(item); }
+    });
+  });
+
+  manualBlocklistJSON = merged;
+
+  const lines = [`✓ Merged ${good.length} file(s) — ${merged.length} unique blockers`];
+  good.forEach(r => lines.push(`  • ${r.name}: ${r.list.length} entries`));
+  if (errors.length) errors.forEach(r => lines.push(`  ✗ ${r.name}: ${r.error}`));
+
+  hint.textContent = lines.join('\n');
+  hint.style.color = errors.length ? 'var(--warning)' : 'var(--success)';
+  hint.style.whiteSpace = 'pre';
+  $('blocklist-ready-label').textContent = `${merged.length} blockers loaded`;
+}
+
+// ── Paste ─────────────────────────────────────────────────────────────────
+function validatePaste() {
+  const raw = $('json-paste').value.trim();
+  if (!raw) { $('paste-hint').textContent = ''; manualBlocklistJSON = null; return; }
+  try {
+    const parsed = JSON.parse(raw);
+    const list = extractBlocklist(parsed);
+    if (!list) throw new Error('Could not find blocklist array.');
+    manualBlocklistJSON = list;
+    $('paste-hint').textContent = `✓ Valid — ${list.length} entries found`;
+    $('paste-hint').style.color = 'var(--success)';
+    $('blocklist-ready-label').textContent = `${list.length} blockers loaded`;
+  } catch (err) {
+    $('paste-hint').textContent = '✗ ' + err.message;
+    $('paste-hint').style.color = 'var(--danger)';
+    manualBlocklistJSON = null;
+    $('blocklist-ready-label').textContent = '';
+  }
+}
+
+// ── Extract blocklist from whatever shape ClearSky returns ────────────────
+function extractBlocklist(parsed) {
+  // Shape: { data: { blocklist: [...] } }
+  if (Array.isArray(parsed?.data?.blocklist)) return parsed.data.blocklist;
+  // Shape: { blocklist: [...] }
+  if (Array.isArray(parsed?.blocklist)) return parsed.blocklist;
+  // Shape: flat array
+  if (Array.isArray(parsed)) return parsed;
+  return null;
+}
+
+// ── Login ──────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const handle = $('handle').value.trim().replace(/^@/, '');
+  const password = $('apppass').value.trim();
+  if (!handle || !password) { setStatus('Please enter your handle and app password.', 'error'); return; }
+
+  // Second-click after CORS fallback: use manual data
+  if (manualBlocklistJSON && session) {
+    allBlockers = manualBlocklistJSON;
+    await finishLoading();
+    return;
+  }
+
+  const btn = $('login-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Connecting…';
+  setStatus('Authenticating with Bluesky…', 'info');
+
+  try {
+    const res = await fetch(`${BSKY}/com.atproto.server.createSession`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: handle, password })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `Auth failed (${res.status})`);
+    }
+    session = await res.json();
+    setStatus(`✓ Logged in as @${session.handle} — fetching blocklist…`, 'info');
+    await fetchAllData();
+  } catch (e) {
+    setStatus('Error: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.innerHTML = 'Connect &amp; Run →';
+  }
+}
+
+// ── Fetch follows + blocks + auto-paginate ClearSky ───────────────────────
+async function fetchAllData() {
+  setStatus('Fetching your follows…', 'info');
+  await fetchMyFollows();
+
+  setStatus('Fetching your existing block list…', 'info');
+  await fetchMyBlocks();
+
+  // Try auto-fetching ClearSky; fall back to manual if CORS blocks it
+  setStatus('Fetching ClearSky blocklist (page 1)…', 'info');
+  const autoResult = await tryAutoPaginateClearSky(session.handle);
+
+  if (autoResult === 'cors') {
+    // CORS blocked — show fallback UI and wait for manual input
+    $('cors-fallback').style.display = '';
+    switchTab('upload');
+    setStatus('⚠ Auto-fetch blocked. Please upload your ClearSky JSON files using the fallback below, then click Connect & Run → again.', 'error');
+    const btn = $('login-btn');
+    btn.disabled = false;
+    btn.innerHTML = 'Connect &amp; Run →';
+    // Next click will skip straight to using manualBlocklistJSON
+    return;
+  }
+
+  // Auto-fetch succeeded
+  allBlockers = autoResult;
+  await finishLoading();
+}
+
+async function tryAutoPaginateClearSky(handle) {
+  const combined = [];
+  let page = 1;
+  while (true) {
+    const url = `${CLEARSKY_BASE}/${encodeURIComponent(handle)}/${page}`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) break; // 404 or similar = no more pages
+      const data = await res.json();
+      const list = extractBlocklist(data) || [];
+      list.forEach(item => {
+        const did = item.did || item;
+        if (!combined.find(x => (x.did || x) === did)) combined.push(item);
+      });
+      setStatus(`Fetched page ${page} — ${combined.length} blockers so far…`, 'info');
+      if (list.length < 100) break; // last page
+      page++;
+      await sleep(200);
+    } catch (e) {
+      // A TypeError from fetch almost always means CORS/network block
+      if (e instanceof TypeError) return 'cors';
+      break;
+    }
+  }
+  return combined;
+}
+
+async function finishLoading() {
+  // Called after allBlockers is populated (either auto or manual)
+  allBlockers = allBlockers.map(item => ({
+    did: item.did || item,
+    handle: item.handle || item.blocked_by || ''
+  }));
+
+  setStatus(`Processing ${allBlockers.length} blockers…`, 'info');
+  await enrichBlockers();
+  renderBlockers();
+
+  $('login-panel').style.display = 'none';
+  $('blockers-panel').style.display = 'block';
+}
+
+async function fetchMyFollows() {
+  myFollows = new Set();
+  let cursor = null;
+  do {
+    const url = `${BSKY}/app.bsky.graph.getFollows?actor=${encodeURIComponent(session.did)}&limit=100` + (cursor ? `&cursor=${encodeURIComponent(cursor)}` : '');
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${session.accessJwt}` } });
+    if (!res.ok) break;
+    const data = await res.json();
+    (data.follows || []).forEach(f => myFollows.add(f.did));
+    cursor = data.cursor || null;
+  } while (cursor);
+}
+
+async function fetchMyBlocks() {
+  myBlocks = new Set();
+  let cursor = null;
+  do {
+    const url = `${BSKY}/app.bsky.graph.getBlocks?limit=100` + (cursor ? `&cursor=${encodeURIComponent(cursor)}` : '');
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${session.accessJwt}` } });
+    if (!res.ok) break;
+    const data = await res.json();
+    (data.blocks || []).forEach(b => myBlocks.add(b.did));
+    cursor = data.cursor || null;
+  } while (cursor);
+}
+
+// ── Enrich DIDs → profiles ─────────────────────────────────────────────────
+async function enrichBlockers() {
+  // Only enrich ones not yet in enriched[]
+  const existing = new Set(enriched.map(e => e.did));
+  const toEnrich = allBlockers.filter(b => !existing.has(b.did));
+  if (!toEnrich.length) return;
+
+  setStatus(`Resolving ${toEnrich.length} profile(s)…`, 'info');
+
+  // Batch in groups of 25
+  for (let i = 0; i < toEnrich.length; i += 25) {
+    const chunk = toEnrich.slice(i, i + 25);
+    const actors = chunk.map(b => `actors=${encodeURIComponent(b.did)}`).join('&');
+    try {
+      const res = await fetch(`${BSKY}/app.bsky.actor.getProfiles?${actors}`, {
+        headers: { Authorization: `Bearer ${session.accessJwt}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const profileMap = {};
+        (data.profiles || []).forEach(p => { profileMap[p.did] = p; });
+
+        chunk.forEach(b => {
+          const p = profileMap[b.did];
+          enriched.push({
+            did: b.did,
+            handle: p?.handle || b.did,
+            displayName: p?.displayName || '',
+            avatar: p?.avatar || '',
+            iFollow: myFollows.has(b.did),
+            alreadyBlocked: myBlocks.has(b.did),
+            blockedNow: false
+          });
+        });
+      } else {
+        // Fallback: add with minimal info
+        chunk.forEach(b => {
+          enriched.push({ did: b.did, handle: b.did, displayName: '', avatar: '', iFollow: myFollows.has(b.did), alreadyBlocked: myBlocks.has(b.did), blockedNow: false });
+        });
+      }
+    } catch (_) {
+      chunk.forEach(b => {
+        enriched.push({ did: b.did, handle: b.did, displayName: '', avatar: '', iFollow: myFollows.has(b.did), alreadyBlocked: myBlocks.has(b.did), blockedNow: false });
+      });
+    }
+    await sleep(100);
+  }
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function applyFilters() { renderBlockers(); }
+
+function isExcluded(item) {
+  if ($('filter-following').checked && item.iFollow) return true;
+  if ($('filter-already').checked && item.alreadyBlocked) return true;
+  return false;
+}
+
+function renderBlockers() {
+  const ul = $('blocker-list');
+  ul.innerHTML = '';
+
+  const skipFollow = $('filter-following').checked;
+  const skipAlready = $('filter-already').checked;
+
+  let total = enriched.length;
+  let following = enriched.filter(e => e.iFollow).length;
+  let already = enriched.filter(e => e.alreadyBlocked && !e.blockedNow).length;
+  let eligible = enriched.filter(e => !isExcluded(e) && !e.blockedNow).length;
+
+  $('stat-total').textContent = total;
+  $('stat-following').textContent = following;
+  $('stat-already').textContent = already;
+  $('stat-eligible').textContent = eligible;
+
+  enriched.forEach(item => {
+    const excluded = isExcluded(item);
+    const li = document.createElement('li');
+    li.className = 'blocker-item' + (excluded ? ' excluded' : '') + (item.alreadyBlocked && !item.blockedNow ? ' already-blocked' : '') + (item.blockedNow ? ' blocked-success' : '');
+    li.dataset.did = item.did;
+
+    // Avatar
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'avatar';
+    if (item.avatar) {
+      const img = document.createElement('img');
+      img.src = item.avatar;
+      img.onerror = () => { avatarDiv.textContent = (item.handle[0] || '?').toUpperCase(); };
+      avatarDiv.appendChild(img);
+    } else {
+      avatarDiv.textContent = (item.handle[0] || '?').toUpperCase();
+    }
+
+    // Info
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'blocker-info';
+    infoDiv.innerHTML = `<div class="blocker-handle">@${escHtml(item.handle)}</div><div class="blocker-did">${escHtml(item.did)}</div>`;
+
+    // Badges
+    const badges = document.createElement('div');
+    badges.className = 'badges';
+    if (item.iFollow) badges.innerHTML += `<span class="badge badge-follow">following</span>`;
+    if (item.alreadyBlocked && !item.blockedNow) badges.innerHTML += `<span class="badge badge-already">blocked</span>`;
+    if (item.blockedNow) badges.innerHTML += `<span class="badge badge-done">✓ blocked</span>`;
+
+    // Checkbox
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.className = 'blocker-cb';
+    cb.dataset.did = item.did;
+    cb.checked = !excluded && !item.blockedNow;
+    cb.disabled = item.blockedNow;
+    cb.addEventListener('change', updateSelectedCount);
+
+    li.append(avatarDiv, infoDiv, badges, cb);
+    ul.appendChild(li);
+  });
+
+  updateSelectedCount();
+  $('page-info').textContent = `Showing ${enriched.length} accounts`;
+}
+
+function updateSelectedCount() {
+  const checked = document.querySelectorAll('.blocker-cb:checked:not(:disabled)');
+  $('selected-count').textContent = `${checked.length} selected`;
+}
+
+function selectAll() {
+  document.querySelectorAll('.blocker-cb:not(:disabled)').forEach(cb => cb.checked = true);
+  updateSelectedCount();
+}
+function selectNone() {
+  document.querySelectorAll('.blocker-cb:not(:disabled)').forEach(cb => cb.checked = false);
+  updateSelectedCount();
+}
+function selectEligible() {
+  document.querySelectorAll('.blocker-cb:not(:disabled)').forEach(cb => {
+    const did = cb.dataset.did;
+    const item = enriched.find(e => e.did === did);
+    cb.checked = item ? !isExcluded(item) : false;
+  });
+  updateSelectedCount();
+}
+
+// ── Block ──────────────────────────────────────────────────────────────────
+async function doBlockSelected() {
+  const checked = [...document.querySelectorAll('.blocker-cb:checked:not(:disabled)')];
+  if (!checked.length) { alert('No accounts selected.'); return; }
+  if (!confirm(`Block ${checked.length} account(s)? This cannot be undone in bulk.`)) return;
+
+  const btn = $('block-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Blocking…';
+  $('log').innerHTML = '';
+
+  let done = 0, errors = 0;
+
+  for (const cb of checked) {
+    const did = cb.dataset.did;
+    const item = enriched.find(e => e.did === did);
+    setProgress(Math.round((done / checked.length) * 100), `${done}/${checked.length} processed`);
+
+    try {
+      const body = {
+        repo: session.did,
+        collection: 'app.bsky.graph.block',
+        record: {
+          $type: 'app.bsky.graph.block',
+          subject: did,
+          createdAt: new Date().toISOString()
+        }
+      };
+      const res = await fetch(`${BSKY}/com.atproto.repo.createRecord`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.accessJwt}` },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || res.status);
+      }
+      if (item) { item.alreadyBlocked = true; item.blockedNow = true; myBlocks.add(did); }
+      logLine(`✓ Blocked @${item?.handle || did}`, 'log-ok');
+    } catch (e) {
+      errors++;
+      logLine(`✗ @${item?.handle || did}: ${e.message}`, 'log-err');
+    }
+    done++;
+    await sleep(300); // Rate-limit friendly
+  }
+
+  setProgress(100, `Done. ${done - errors} blocked, ${errors} errors.`);
+  btn.disabled = false;
+  btn.innerHTML = 'Block Selected';
+  renderBlockers();
+}
+
+// ── Reset ──────────────────────────────────────────────────────────────────
+function resetApp() {
+  session = null; myFollows = new Set(); myBlocks = new Set();
+  allBlockers = []; enriched = []; manualBlocklistJSON = null;
+  $('handle').value = ''; $('apppass').value = '';
+  $('json-paste').value = '';
+  $('json-file').value = '';
+  $('upload-hint').textContent = ''; $('upload-hint').style.whiteSpace = '';
+  $('paste-hint').textContent = '';
+  $('blocklist-ready-label').textContent = '';
+  $('clearsky-url-list').textContent = 'Enter your handle above to see your URLs';
+  $('cors-fallback').style.display = 'none';
+  $('login-panel').style.display = '';
+  $('blockers-panel').style.display = 'none';
+  clearStatus();
+  $('login-btn').disabled = false;
+  $('login-btn').innerHTML = 'Connect &amp; Run →';
+}
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Enter key on inputs
+['handle','apppass'].forEach(id => {
+  $(id).addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+});
+
+// Init tab state
+switchTab('upload');
+</script>
+</body>
+</html>
