@@ -2,7 +2,8 @@
 
 **A Bluesky tool to find accounts blocking you — filter them, and block them back.**
 
-Made by [ICZE4R](https://bsky.app/profile/iczer.one) • [→ Open the tool](https://icze4r.github.io/blockback/)
+Made by Durandal
+an [ICZE4R](https://bsky.app/profile/iczer.one) joint • [→ Open the tool](https://icze4r.github.io/blockback/)
 
 ---
 
